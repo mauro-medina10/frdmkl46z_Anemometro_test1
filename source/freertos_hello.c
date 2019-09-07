@@ -86,6 +86,6 @@ static void hello_task(void *pvParameters)
     for (;;)
     {
         PRINTF("Hello world.\r\n");
-        vTaskSuspend(NULL);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
