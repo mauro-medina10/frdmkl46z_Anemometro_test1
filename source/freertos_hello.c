@@ -55,7 +55,9 @@
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-static void hello_task(void *pvParameters);
+static void led_Rojo_task(void *pvParameters);
+static void led_Verde_task(void *pvParameters);
+
 
 /*******************************************************************************
  * Code
@@ -68,9 +70,13 @@ int main(void)
     /* Init board hardware. */
     board_init();
 
-    if (xTaskCreate(hello_task, "Hello_task", configMINIMAL_STACK_SIZE + 10, NULL, hello_task_PRIORITY, NULL) != pdPASS)
+    if (xTaskCreate(led_Rojo_task, "led_Rojo_task", configMINIMAL_STACK_SIZE + 10, NULL, hello_task_PRIORITY, NULL) != pdPASS)
     {
-        PRINTF("Task creation failed!.\r\n");
+        while (1)
+            ;
+    }
+    if (xTaskCreate(led_Verde_task, "led_Verde_task", configMINIMAL_STACK_SIZE + 10, NULL, hello_task_PRIORITY, NULL) != pdPASS)
+    {
         while (1)
             ;
     }
@@ -82,12 +88,19 @@ int main(void)
 /*!
  * @brief Task responsible for printing of "Hello world." message.
  */
-static void hello_task(void *pvParameters)
+static void led_Rojo_task(void *pvParameters)
 {
     for (;;)
     {
-        PRINTF("Hello world.\r\n");
         board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_TOGGLE);
         vTaskDelay(500 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
+    }
+}
+static void led_Verde_task(void *pvParameters)
+{
+    for (;;)
+    {
+        board_setLed(BOARD_LED_ID_VERDE, BOARD_LED_MSG_TOGGLE);
+        vTaskDelay(1000 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
     }
 }
