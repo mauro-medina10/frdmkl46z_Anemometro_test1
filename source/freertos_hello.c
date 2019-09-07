@@ -43,6 +43,8 @@
 #include "fsl_debug_console.h"
 #include "board.h"
 
+#include "board_dsi.h"
+
 #include "pin_mux.h"
 /*******************************************************************************
  * Definitions
@@ -64,9 +66,8 @@ static void hello_task(void *pvParameters);
 int main(void)
 {
     /* Init board hardware. */
-    BOARD_InitPins();
-    BOARD_BootClockRUN();
-    BOARD_InitDebugConsole();
+    board_init();
+
     if (xTaskCreate(hello_task, "Hello_task", configMINIMAL_STACK_SIZE + 10, NULL, hello_task_PRIORITY, NULL) != pdPASS)
     {
         PRINTF("Task creation failed!.\r\n");
@@ -86,6 +87,7 @@ static void hello_task(void *pvParameters)
     for (;;)
     {
         PRINTF("Hello world.\r\n");
+        board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_TOGGLE);
         vTaskDelay(500 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
     }
 }
