@@ -86,6 +86,6 @@ static void hello_task(void *pvParameters)
     for (;;)
     {
         PRINTF("Hello world.\r\n");
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
     }
 }
