@@ -101,6 +101,6 @@ static void led_Verde_task(void *pvParameters)
     for (;;)
     {
         board_setLed(BOARD_LED_ID_VERDE, BOARD_LED_MSG_TOGGLE);
-        vTaskDelay(1000 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
+        vTaskDelay(750 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
     }
 }
