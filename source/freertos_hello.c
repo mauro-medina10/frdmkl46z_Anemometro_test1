@@ -42,22 +42,29 @@
 #include "fsl_device_registers.h"
 #include "fsl_debug_console.h"
 #include "board.h"
-
+#include "fsl_debug_console.h"
 #include "board_dsi.h"
 
 #include "pin_mux.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+/* Blinkeo led */
+typedef struct
+{
+    board_ledId_enum idLed;
+    uint32_t semiPeriodo;
+}paramBlinked_t;
 
 /* Task priorities. */
-#define hello_task_PRIORITY (configMAX_PRIORITIES - 1)
+#define blinky_task_PRIORITY ( 1 )
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-static void led_Rojo_task(void *pvParameters);
-static void led_Verde_task(void *pvParameters);
+static void blinky_task(void *pvParameters);
 
+paramBlinked_t redLed = {BOARD_LED_ID_ROJO , 500};
+paramBlinked_t greenLed = {BOARD_LED_ID_VERDE , 750};
 
 /*******************************************************************************
  * Code
@@ -70,12 +77,12 @@ int main(void)
     /* Init board hardware. */
     board_init();
 
-    if (xTaskCreate(led_Rojo_task, "led_Rojo_task", 100, NULL, hello_task_PRIORITY, NULL) != pdPASS)
+    if (xTaskCreate(blinky_task, "red_blinky_task", 100, &redLed, blinky_task_PRIORITY, NULL) != pdPASS)
     {
         while (1)
             ;
     }
-    if (xTaskCreate(led_Verde_task, "led_Verde_task", 100, NULL, hello_task_PRIORITY, NULL) != pdPASS)
+    if (xTaskCreate(blinky_task, "green_blinky_task", 100, &greenLed, blinky_task_PRIORITY, NULL) != pdPASS)
     {
         while (1)
             ;
@@ -88,20 +95,16 @@ int main(void)
 /*!
  * @brief Task responsible for printing of "Hello world." message.
  */
-static void led_Rojo_task(void *pvParameters)
+static void blinky_task(void *pvParameters)
 {
+    paramBlinked_t *paramBlinked;
+
+    paramBlinked = (paramBlinked_t*) pvParameters;
+
     for (;;)
     {
-        board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_TOGGLE);
-        vTaskDelay(500 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
-    }
-}
-static void led_Verde_task(void *pvParameters)
-{
-    for (;;)
-    {
-        board_setLed(BOARD_LED_ID_VERDE, BOARD_LED_MSG_TOGGLE);
-        vTaskDelay(750 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
+        board_setLed(paramBlinked->idLed, BOARD_LED_MSG_TOGGLE);
+        vTaskDelay((paramBlinked->semiPeriodo) / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
     }
 }
 
