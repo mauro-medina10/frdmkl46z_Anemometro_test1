@@ -133,5 +133,6 @@ void vApplicationTickHook(void)
 
 extern void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 {
+    printf("Overflow stack: %s",pcTaskName);
     while(1);
 }
