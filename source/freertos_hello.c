@@ -44,7 +44,7 @@
 #include "board.h"
 #include "fsl_debug_console.h"
 #include "board_dsi.h"
-
+#include "stdio.h"
 #include "pin_mux.h"
 /*******************************************************************************
  * Definitions
@@ -79,11 +79,13 @@ int main(void)
 
     if (xTaskCreate(blinky_task, "red_blinky_task", 100, &redLed, blinky_task_PRIORITY, NULL) != pdPASS)
     {
+        printf("Error creacion task 1");
         while (1)
             ;
     }
     if (xTaskCreate(blinky_task, "green_blinky_task", 100, &greenLed, blinky_task_PRIORITY, NULL) != pdPASS)
     {
+        printf("Error creacion task 2");
         while (1)
             ;
     }
