@@ -70,12 +70,12 @@ int main(void)
     /* Init board hardware. */
     board_init();
 
-    if (xTaskCreate(led_Rojo_task, "led_Rojo_task", configMINIMAL_STACK_SIZE + 10, NULL, hello_task_PRIORITY, NULL) != pdPASS)
+    if (xTaskCreate(led_Rojo_task, "led_Rojo_task", 100, NULL, hello_task_PRIORITY, NULL) != pdPASS)
     {
         while (1)
             ;
     }
-    if (xTaskCreate(led_Verde_task, "led_Verde_task", configMINIMAL_STACK_SIZE + 10, NULL, hello_task_PRIORITY, NULL) != pdPASS)
+    if (xTaskCreate(led_Verde_task, "led_Verde_task", 100, NULL, hello_task_PRIORITY, NULL) != pdPASS)
     {
         while (1)
             ;
@@ -103,4 +103,9 @@ static void led_Verde_task(void *pvParameters)
         board_setLed(BOARD_LED_ID_VERDE, BOARD_LED_MSG_TOGGLE);
         vTaskDelay(750 / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
     }
+}
+
+extern void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+{
+    while(1);
 }
