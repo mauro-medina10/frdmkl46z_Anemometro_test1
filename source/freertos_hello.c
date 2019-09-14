@@ -121,8 +121,8 @@ static void blinky_task(void *pvParameters)
         else
         {
             board_setLed(paramBlinked->idLed, BOARD_LED_MSG_OFF);
+            vTaskDelay(10 / portTICK_PERIOD_MS);
         }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 
