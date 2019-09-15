@@ -65,8 +65,8 @@ typedef struct
  ******************************************************************************/
 static void blinky_task(void *pvParameters);
 
-static const paramBlinked_t redLed = {BOARD_LED_ID_ROJO ,BOARD_SW_ID_1, 500};
-static const paramBlinked_t greenLed = {BOARD_LED_ID_VERDE,BOARD_SW_ID_3 , 750};
+static const board_ledConf_enum redLed = {BOARD_LED_ID_ROJO ,BOARD_LED_MSG_HEARTBEAT, 500 , 6};
+static const board_ledConf_enum greenLed = {BOARD_LED_ID_VERDE,BOARD_LED_MSG_PULSE_TRAIN , 750 , 6};
 
 
 /*******************************************************************************
@@ -102,33 +102,21 @@ int main(void)
 /* Cuando se pulsa un sw empieza a parpadear el led o se apaga*/
 static void blinky_task(void *pvParameters)
 {
-    paramBlinked_t *paramBlinked;
-    bool swEventflag = 0;
+    board_ledConf_enum* paramBlinked;
 
-    paramBlinked = (paramBlinked_t*) pvParameters;
+    paramBlinked = (board_ledConf_enum*) pvParameters;
 
     for (;;)
     {
-        if(key_getPressEv(paramBlinked->idSW))
-            {
-            swEventflag = !swEventflag;
-            }
-        if(swEventflag)
-        {
-            board_setLed(paramBlinked->idLed, BOARD_LED_MSG_TOGGLE);
-            vTaskDelay((paramBlinked->semiPeriodo) / portTICK_PERIOD_MS); /* Esta configurado en 1 tick cada 5ms (el minimo es 1ms) */
-        }
-        else
-        {
-            board_setLed(paramBlinked->idLed, BOARD_LED_MSG_OFF);
-            vTaskDelay(10 / portTICK_PERIOD_MS);
-        }
+        board_setLed(paramBlinked);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
 void vApplicationTickHook(void)
 {
     key_periodicTask1ms();
+    board_periodicTask1msLed();
 }
 
 extern void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
