@@ -47,6 +47,7 @@
 #include "stdio.h"
 #include "pin_mux.h"
 #include "key.h"
+#include "led_rtos.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -65,8 +66,8 @@ typedef struct
  ******************************************************************************/
 static void blinky_task(void *pvParameters);
 
-static const board_ledConf_enum redLed = {BOARD_LED_ID_ROJO ,BOARD_LED_MSG_HEARTBEAT, 500 , 6};
-static const board_ledConf_enum greenLed = {BOARD_LED_ID_VERDE,BOARD_LED_MSG_PULSE_TRAIN , 750 , 6};
+led_conf_enum redLed = {BOARD_LED_ID_ROJO ,LED_MSG_HEARTBEAT, 600 , 3};
+led_conf_enum geenLed = {BOARD_LED_ID_VERDE,LED_MSG_PULSE_TRAIN , 500 , 6};
 
 
 /*******************************************************************************
@@ -88,7 +89,7 @@ int main(void)
         while (1)
             ;
     }
-    if (xTaskCreate(blinky_task, "green_blinky_task", configMINIMAL_STACK_SIZE, (void * const)&greenLed, blinky_task_PRIORITY, NULL) != pdPASS)
+    if (xTaskCreate(blinky_task, "green_blinky_task", configMINIMAL_STACK_SIZE, (void * const) &geenLed, blinky_task_PRIORITY, NULL) != pdPASS)
     {
         printf("Error creacion task 2");
         while (1)
@@ -102,13 +103,17 @@ int main(void)
 /* Cuando se pulsa un sw empieza a parpadear el led o se apaga*/
 static void blinky_task(void *pvParameters)
 {
-    board_ledConf_enum* paramBlinked;
-
-    paramBlinked = (board_ledConf_enum*) pvParameters;
+    led_conf_enum* paramBlinked;
+    uint8_t ledSetted = 0;
+    paramBlinked = (led_conf_enum*) pvParameters;
 
     for (;;)
     {
-        board_setLed(paramBlinked);
+        if(ledSetted == 0)
+        {
+            led_setConf(paramBlinked);
+            ledSetted = 1;
+        }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
@@ -116,7 +121,7 @@ static void blinky_task(void *pvParameters)
 void vApplicationTickHook(void)
 {
     key_periodicTask1ms();
-    board_periodicTask1msLed();
+    led_periodicTask1ms();
 }
 
 extern void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
