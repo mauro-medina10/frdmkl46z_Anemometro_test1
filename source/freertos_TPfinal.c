@@ -64,7 +64,7 @@
 #define LED_ON "LED:ON"
 #define LED_OFF "LED:OFF"
 
-#define MMAmesagge "[%6u] ACC:X=%3u;Y=%3u;Z=%3u \r\n"
+#define MMAmesagge "[%6u] ACC:X=%3d;Y=%3d;Z=%3d \r\n"
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -141,7 +141,7 @@ static void mma8451_task(void *pvParameters)
 
         switch(mma8451){
         case ESPERANDO:
-            if(abs(accXaux - accX) > ACC_THR || abs(accXaux - accX) > ACC_THR || abs(accXaux - accX) > ACC_THR)
+            if(abs(accXaux - accX) > ACC_THR || abs(accYaux - accY) > ACC_THR || abs(accYaux - accY) > ACC_THR)
             {
                 accX = accXaux;
                 accY = accYaux;
@@ -153,7 +153,7 @@ static void mma8451_task(void *pvParameters)
             }
             break;
         case WORKING:
-            for(int i = 0; i < ACC_CNT; i++)
+            for(int i = 0; i < (ACC_CNT-1); i++)
             {
                 accX = mma8451_getAcX();
                 accY = mma8451_getAcY();
