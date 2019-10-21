@@ -49,6 +49,7 @@
 #include "pin_mux.h"
 #include "adc.h"
 #include "led_rtos.h"
+#include "mma8451.h"
 #include "uart_rtos.h"
 
 /*******************************************************************************
@@ -57,18 +58,21 @@
 #define LUZ_SAMPLE_TIME 1
 #define LUZ_THR 3000
 
+#define ACC_THR 20
+#define ACC_CNT 5
+
 #define LED_ON "LED:ON"
 #define LED_OFF "LED:OFF"
+
+#define MMAmesagge "[%6u] ACC:X=%3u;Y=%3u;Z=%3u \r\n"
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
 static void luz_task(void *pvParameters);
-//static void mma8451_task(void *pvParameters);
+static void mma8451_task(void *pvParameters);
 
 led_conf_enum redLedOn = {BOARD_LED_ID_ROJO ,LED_MSG_ON, 0 , 0};
 led_conf_enum redLedOff = {BOARD_LED_ID_ROJO,LED_MSG_OFF , 0 , 0};
-
-volatile TickType_t tickTime = 0;
 
 /*******************************************************************************
  * Declarations
@@ -80,6 +84,12 @@ typedef enum
     PRENDIDO = 0,
     APAGADO
 }led_state_enum;
+
+typedef enum
+{
+    ESPERANDO = 0,
+    WORKING
+}mma_state_enum;
 
 /*******************************************************************************
  * Code
@@ -103,20 +113,67 @@ int main(void)
         while (1)
             ;
     }
-//    if (xTaskCreate(mma8451_task, "mma8451_task", configMINIMAL_STACK_SIZE * 2, NULL, 1, NULL) != pdPASS)
-//    {
-//        printf("Error creacion UART0 task");
-//        while (1)
-//            ;
-//    }
+    if (xTaskCreate(mma8451_task, "mma8451_task", configMINIMAL_STACK_SIZE * 3, NULL, 1, NULL) != pdPASS)
+    {
+        printf("Error creacion MMA8451 task");
+        while (1)
+            ;
+    }
 
     vTaskStartScheduler();
     for (;;)
         ;
 }
 
+static void mma8451_task(void *pvParameters)
+{
+    volatile TickType_t tickTime = 0;
+    mma_state_enum mma8451 = ESPERANDO;
+    int16_t accXaux = 0, accYaux = 0,accZaux = 0;
+    int16_t accX = 0, accY = 0,accZ = 0;
+    uint8_t message[33];
+
+    while(1)
+    {
+        accXaux = mma8451_getAcX();
+        accYaux = mma8451_getAcY();
+        accZaux = mma8451_getAcZ();
+
+        switch(mma8451){
+        case ESPERANDO:
+            if(abs(accXaux - accX) > ACC_THR || abs(accXaux - accX) > ACC_THR || abs(accXaux - accX) > ACC_THR)
+            {
+                accX = accXaux;
+                accY = accYaux;
+                accZ = accZaux;
+                tickTime = xTaskGetTickCount();
+                mma8451 = WORKING;
+                sprintf((char*)message,MMAmesagge, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
+                uart_rtos_envDatos(message,33,portMAX_DELAY);
+            }
+            break;
+        case WORKING:
+            for(int i = 0; i < ACC_CNT; i++)
+            {
+                accX = mma8451_getAcX();
+                accY = mma8451_getAcY();
+                accZ = mma8451_getAcZ();
+                tickTime = xTaskGetTickCount();
+                sprintf((char*)message,MMAmesagge, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
+                uart_rtos_envDatos(message,33,portMAX_DELAY);
+            }
+            mma8451 = ESPERANDO;
+            break;
+        default: mma8451 = ESPERANDO;
+        break;
+        }
+    }
+}
+
 static void luz_task(void *pvParameters)
 {
+    volatile TickType_t tickTime = 0;
+
     int32_t samples = 20;
     int32_t prom = 0;
     uint8_t message[17] = "                 ";
