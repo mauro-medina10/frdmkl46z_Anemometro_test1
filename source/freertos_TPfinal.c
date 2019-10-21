@@ -37,6 +37,7 @@
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
+#include "semphr.h"
 
 /* Freescale includes. */
 #include "fsl_device_registers.h"
@@ -46,29 +47,39 @@
 #include "board_dsi.h"
 #include "stdio.h"
 #include "pin_mux.h"
-#include "key.h"
+#include "adc.h"
 #include "led_rtos.h"
+#include "uart_rtos.h"
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-/* Blinkeo led */
-typedef struct
-{
-    board_ledId_enum idLed;
-    board_swId_enum idSW;
-    uint32_t semiPeriodo;
-}paramBlinked_t;
+#define LUZ_SAMPLE_TIME 1
+#define LUZ_THR 3000
 
-/* Task priorities. */
-#define blinky_task_PRIORITY ( 1 )
+#define LED_ON "LED:ON"
+#define LED_OFF "LED:OFF"
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-static void blinky_task(void *pvParameters);
+static void luz_task(void *pvParameters);
+//static void mma8451_task(void *pvParameters);
 
-led_conf_enum redLed = {BOARD_LED_ID_ROJO ,LED_MSG_HEARTBEAT, 600 , 3};
-led_conf_enum geenLed = {BOARD_LED_ID_VERDE,LED_MSG_PULSE_TRAIN , 500 , 6};
+led_conf_enum redLedOn = {BOARD_LED_ID_ROJO ,LED_MSG_ON, 0 , 0};
+led_conf_enum redLedOff = {BOARD_LED_ID_ROJO,LED_MSG_OFF , 0 , 0};
 
+volatile TickType_t tickTime = 0;
+
+/*******************************************************************************
+ * Declarations
+ ******************************************************************************/
+SemaphoreHandle_t xSemaphoreLuz;
+
+typedef enum
+{
+    PRENDIDO = 0,
+    APAGADO
+}led_state_enum;
 
 /*******************************************************************************
  * Code
@@ -79,48 +90,76 @@ led_conf_enum geenLed = {BOARD_LED_ID_VERDE,LED_MSG_PULSE_TRAIN , 500 , 6};
 int main(void)
 {
     /* Init board hardware. */
+    BOARD_InitPins();
+    BOARD_BootClockRUN();
+    BOARD_InitDebugConsole();
+    /* Init board hardware. */
     board_init();
 
-    key_init();
 
-    if (xTaskCreate(blinky_task, "red_blinky_task", configMINIMAL_STACK_SIZE,(void * const) &redLed, blinky_task_PRIORITY, NULL) != pdPASS)
+    if (xTaskCreate(luz_task, "red_led_task", configMINIMAL_STACK_SIZE * 2,NULL,1 , NULL) != pdPASS)
     {
-        printf("Error creacion task 1");
+        printf("Error creacion task red led");
         while (1)
             ;
     }
-    if (xTaskCreate(blinky_task, "green_blinky_task", configMINIMAL_STACK_SIZE, (void * const) &geenLed, blinky_task_PRIORITY, NULL) != pdPASS)
-    {
-        printf("Error creacion task 2");
-        while (1)
-            ;
-    }
+//    if (xTaskCreate(mma8451_task, "mma8451_task", configMINIMAL_STACK_SIZE * 2, NULL, 1, NULL) != pdPASS)
+//    {
+//        printf("Error creacion UART0 task");
+//        while (1)
+//            ;
+//    }
 
     vTaskStartScheduler();
     for (;;)
         ;
 }
-/* Cuando se pulsa un sw empieza a parpadear el led o se apaga*/
-static void blinky_task(void *pvParameters)
-{
-    led_conf_enum* paramBlinked;
-    uint8_t ledSetted = 0;
-    paramBlinked = (led_conf_enum*) pvParameters;
 
-    for (;;)
+static void luz_task(void *pvParameters)
+{
+    int32_t samples = 20;
+    int32_t prom = 0;
+    uint8_t message[17] = "                 ";
+    led_state_enum ledRojo = APAGADO;
+
+    adc_init(LUZ_SAMPLE_TIME);
+
+    while(1)
     {
-        if(ledSetted == 0)
+        prom = adc_getProm_nonbloq(samples);
+        tickTime = xTaskGetTickCount();
+        switch(ledRojo)
         {
-            led_setConf(paramBlinked);
-            ledSetted = 1;
+        case APAGADO:
+            if(prom > LUZ_THR)
+            {
+                led_setConf(&redLedOn);
+                ledRojo = PRENDIDO;
+                sprintf((char*)message,"[%6u]%s \n\r", tickTime/portTICK_PERIOD_MS,LED_ON );
+                uart_rtos_envDatos(message,17,portMAX_DELAY);
+                vTaskDelay(50 / portTICK_PERIOD_MS);
+            }
+            break;
+        case PRENDIDO:
+            if(prom < LUZ_THR)
+            {
+                led_setConf(&redLedOff);
+                ledRojo = APAGADO;
+                sprintf((char*)message,"[%6u]%s \n\r", tickTime/portTICK_PERIOD_MS,LED_OFF );
+                uart_rtos_envDatos(message,17,portMAX_DELAY);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }
+            break;
+        default:
+            led_setConf(&redLedOff);
+            ledRojo = APAGADO;
+            break;
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
 void vApplicationTickHook(void)
 {
-    key_periodicTask1ms();
     led_periodicTask1ms();
 }
 
@@ -129,3 +168,4 @@ extern void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName 
     printf("Overflow stack: %s",pcTaskName);
     while(1);
 }
+

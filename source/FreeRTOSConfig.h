@@ -79,7 +79,7 @@
 #define configUSE_DAEMON_TASK_STARTUP_HOOK      0
 
 /* Run time and task stats gathering related definitions. */
-#define configGENERATE_RUN_TIME_STATS           0
+#define configGENERATE_RUN_TIME_STATS           1
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_STATS_FORMATTING_FUNCTIONS    0
 
@@ -112,9 +112,15 @@
 #define INCLUDE_xTaskGetIdleTaskHandle          0
 #define INCLUDE_eTaskGetState                   0
 #define INCLUDE_xTimerPendFunctionCall          1
-#define INCLUDE_xTaskAbortDelay                 0
+#define INCLUDE_xTaskAbortDelay                 1
 #define INCLUDE_xTaskGetHandle                  0
 #define INCLUDE_xTaskResumeFromISR              1
+
+void timerForRTS_init(void);
+unsigned long int timerForRTS_get(void);
+
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()    timerForRTS_init()
+#define portGET_RUN_TIME_COUNTER_VALUE()            timerForRTS_get()
 
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
