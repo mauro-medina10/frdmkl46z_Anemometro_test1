@@ -137,9 +137,8 @@ static void mma8451_task(void *pvParameters)
 
     while(1)
     {
-        accXaux = mma8451_getAcX();
-        accYaux = mma8451_getAcY();
-        accZaux = mma8451_getAcZ();
+
+        mma8451_getAll(&accXaux,&accYaux,&accZaux);
 
         switch(mma8451){
         case ESPERANDO:
@@ -157,9 +156,8 @@ static void mma8451_task(void *pvParameters)
         case WORKING:
             for(int i = 0; i < (ACC_CNT-1); i++)
             {
-                accX = mma8451_getAcX();
-                accY = mma8451_getAcY();
-                accZ = mma8451_getAcZ();
+                mma8451_getAll(&accX,&accY,&accZ);
+
                 tickTime = xTaskGetTickCount();
                 sprintf((char*)message,MMAmesagge, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
                 uart_rtos_envDatos(message,33,portMAX_DELAY);
