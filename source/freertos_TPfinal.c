@@ -108,7 +108,7 @@ int main(void)
     board_init();
 
 
-    if (xTaskCreate(luz_task, "red_led_task", configMINIMAL_STACK_SIZE * 2,NULL, 1 , NULL) != pdPASS)
+    if (xTaskCreate(luz_task, "red_led_task", configMINIMAL_STACK_SIZE * 2,NULL, 2 , NULL) != pdPASS)
     {
         printf("Error creacion task red led");
         while (1)
