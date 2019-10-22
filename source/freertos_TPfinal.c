@@ -64,8 +64,8 @@
 
 #define LED_ON "LED:ON"
 #define LED_OFF "LED:OFF"
-#define LUZ_MESAGGE "[%6u]%s \n\r"
-#define ACC_MESAGGE "[%6u] ACC:X=%3d;Y=%3d;Z=%3d \r\n"
+#define LUZ_MESSAGE "[%6u]%s \n\r"
+#define ACC_MESSAGE "[%6u] ACC:X=%3d;Y=%3d;Z=%3d \r\n"
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -150,7 +150,7 @@ static void mma8451_task(void *pvParameters)
                 accZ = accZaux;
                 tickTime = xTaskGetTickCount();
                 mma8451 = WORKING;
-                sprintf((char*)message,ACC_MESAGGE, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
+                sprintf((char*)message,ACC_MESSAGE, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
                 uart_rtos_envDatos(message,33,portMAX_DELAY);
             }
             break;
@@ -160,7 +160,7 @@ static void mma8451_task(void *pvParameters)
                 mma8451_getAll(&accX,&accY,&accZ);
 
                 tickTime = xTaskGetTickCount();
-                sprintf((char*)message,ACC_MESAGGE, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
+                sprintf((char*)message,ACC_MESSAGE, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
                 uart_rtos_envDatos(message,33,portMAX_DELAY);
             }
             mma8451 = ESPERANDO;
@@ -192,7 +192,7 @@ static void luz_task(void *pvParameters)
             {
                 led_setConf(&redLedOn);
                 ledRojo = PRENDIDO;
-                sprintf((char*)message, LUZ_MESAGGE , tickTime/portTICK_PERIOD_MS,LED_ON );
+                sprintf((char*)message, LUZ_MESSAGE , tickTime/portTICK_PERIOD_MS,LED_ON );
                 uart_rtos_envDatos(message, 17 ,portMAX_DELAY);
                 vTaskDelay(50 / portTICK_PERIOD_MS);
             }
@@ -202,7 +202,7 @@ static void luz_task(void *pvParameters)
             {
                 led_setConf(&redLedOff);
                 ledRojo = APAGADO;
-                sprintf((char*)message, LUZ_MESAGGE , tickTime/portTICK_PERIOD_MS,LED_OFF );
+                sprintf((char*)message, LUZ_MESSAGE , tickTime/portTICK_PERIOD_MS,LED_OFF );
                 uart_rtos_envDatos(message, 17 ,portMAX_DELAY);
                 vTaskDelay(100 / portTICK_PERIOD_MS);
             }
