@@ -49,7 +49,7 @@
 #include "pin_mux.h"
 #include "adc.h"
 #include "led_rtos.h"
-#include "mma8451.h"
+#include "mma8451_rtos.h"
 #include "uart_rtos.h"
 
 /*******************************************************************************
@@ -107,13 +107,13 @@ int main(void)
     board_init();
 
 
-    if (xTaskCreate(luz_task, "red_led_task", configMINIMAL_STACK_SIZE * 2,NULL,1 , NULL) != pdPASS)
+    if (xTaskCreate(luz_task, "red_led_task", configMINIMAL_STACK_SIZE * 2,NULL, 1 , NULL) != pdPASS)
     {
         printf("Error creacion task red led");
         while (1)
             ;
     }
-    if (xTaskCreate(mma8451_task, "mma8451_task", configMINIMAL_STACK_SIZE * 3, NULL, 1, NULL) != pdPASS)
+    if (xTaskCreate(mma8451_task, "mma8451_task", configMINIMAL_STACK_SIZE * 2, NULL, 1 , NULL) != pdPASS)
     {
         printf("Error creacion MMA8451 task");
         while (1)
@@ -132,6 +132,8 @@ static void mma8451_task(void *pvParameters)
     int16_t accXaux = 0, accYaux = 0,accZaux = 0;
     int16_t accX = 0, accY = 0,accZ = 0;
     uint8_t message[33];
+
+    mma8451_init();
 
     while(1)
     {
