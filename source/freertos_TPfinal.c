@@ -57,14 +57,15 @@
  ******************************************************************************/
 #define LUZ_SAMPLE_TIME 1
 #define LUZ_THR 3000
+#define LUZ_SAMPLES 20
 
 #define ACC_THR 20
 #define ACC_CNT 5
 
 #define LED_ON "LED:ON"
 #define LED_OFF "LED:OFF"
-
-#define MMAmesagge "[%6u] ACC:X=%3d;Y=%3d;Z=%3d \r\n"
+#define LUZ_MESAGGE "[%6u]%s \n\r"
+#define ACC_MESAGGE "[%6u] ACC:X=%3d;Y=%3d;Z=%3d \r\n"
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -149,7 +150,7 @@ static void mma8451_task(void *pvParameters)
                 accZ = accZaux;
                 tickTime = xTaskGetTickCount();
                 mma8451 = WORKING;
-                sprintf((char*)message,MMAmesagge, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
+                sprintf((char*)message,ACC_MESAGGE, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
                 uart_rtos_envDatos(message,33,portMAX_DELAY);
             }
             break;
@@ -159,7 +160,7 @@ static void mma8451_task(void *pvParameters)
                 mma8451_getAll(&accX,&accY,&accZ);
 
                 tickTime = xTaskGetTickCount();
-                sprintf((char*)message,MMAmesagge, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
+                sprintf((char*)message,ACC_MESAGGE, tickTime/portTICK_PERIOD_MS,accX,accY,accZ);
                 uart_rtos_envDatos(message,33,portMAX_DELAY);
             }
             mma8451 = ESPERANDO;
@@ -174,16 +175,15 @@ static void luz_task(void *pvParameters)
 {
     volatile TickType_t tickTime = 0;
 
-    int32_t samples = 20;
     int32_t prom = 0;
-    uint8_t message[17] = "                 ";
+    uint8_t message[17];
     led_state_enum ledRojo = APAGADO;
 
     adc_init(LUZ_SAMPLE_TIME);
 
     while(1)
     {
-        prom = adc_getProm_nonbloq(samples);
+        prom = adc_getProm_nonbloq(LUZ_SAMPLES);
         tickTime = xTaskGetTickCount();
         switch(ledRojo)
         {
@@ -192,8 +192,8 @@ static void luz_task(void *pvParameters)
             {
                 led_setConf(&redLedOn);
                 ledRojo = PRENDIDO;
-                sprintf((char*)message,"[%6u]%s \n\r", tickTime/portTICK_PERIOD_MS,LED_ON );
-                uart_rtos_envDatos(message,17,portMAX_DELAY);
+                sprintf((char*)message, LUZ_MESAGGE , tickTime/portTICK_PERIOD_MS,LED_ON );
+                uart_rtos_envDatos(message, 17 ,portMAX_DELAY);
                 vTaskDelay(50 / portTICK_PERIOD_MS);
             }
             break;
@@ -202,8 +202,8 @@ static void luz_task(void *pvParameters)
             {
                 led_setConf(&redLedOff);
                 ledRojo = APAGADO;
-                sprintf((char*)message,"[%6u]%s \n\r", tickTime/portTICK_PERIOD_MS,LED_OFF );
-                uart_rtos_envDatos(message,17,portMAX_DELAY);
+                sprintf((char*)message, LUZ_MESAGGE , tickTime/portTICK_PERIOD_MS,LED_OFF );
+                uart_rtos_envDatos(message, 17 ,portMAX_DELAY);
                 vTaskDelay(100 / portTICK_PERIOD_MS);
             }
             break;
