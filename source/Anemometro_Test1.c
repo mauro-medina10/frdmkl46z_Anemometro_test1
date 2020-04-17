@@ -43,6 +43,7 @@
 #include "board_dsi.h"
 #include "key.h"
 #include "led_rtos.h"
+#include "fsl_common.h"
 
 /*******************************************************************************
  * Definitions
@@ -115,9 +116,11 @@ int main(void)
 }
 static void pwm_task(void *pvParameters){
     int32_t adcLect = 0;
+    uint32_t timerCount = 0;
+    uint64_t usecCount = 0;
     acd_state_enum adcState = FIRST_TRIGGER;
     bool detectionFlag = false;
-    bool adcRefFlag = false;
+    bool adcRefFlag = true;
 
     while(1){
         if(key_waitForPressEv(BOARD_SW_ID_3, portMAX_DELAY)){
@@ -134,31 +137,45 @@ static void pwm_task(void *pvParameters){
 
             while(detectionFlag){
                 switch(adcState){
-                case FIRST_TRIGGER:
-                    adc_getValueBlocking(&adcLect, portMAX_DELAY);
+                    case FIRST_TRIGGER:
+                        adc_getValueBlocking(&adcLect, portMAX_DELAY);
 
-                    if(adcRefFlag && adcLect <= ADC_REF){
-                        adcState = SECOND_TRIGGER;
-                        adcRefFlag = false;
-                    }
-                    else if(!adcRefFlag && adcLect > ADC_REF_H){
-                        adcRefFlag = true;
-                    }
-                    break;
-
-                case SECOND_TRIGGER:
-                    if(adc_getValueBlocking(&adcLect, portMAX_DELAY) && adcLect < ADC_REF_L){
-                         /*PULSO DETECTADO*/
-                        detectionFlag = false;
-
-                        adcState = FIRST_TRIGGER;
-                    }
-                    break;
-
-                default: adcState = FIRST_TRIGGER;
+                        //Primero espero que se supere el valor superior
+                        if(adcRefFlag && adcLect > ADC_REF_H){
+                            adcRefFlag = false;
+                        }
+                        //Luego se espra a que se cruce el valor de ref
+                        else if(!adcRefFlag && adcLect <= ADC_REF){
+                            adcState = SECOND_TRIGGER;
+                            adcRefFlag = true;
+                        }
                         break;
+
+                    case SECOND_TRIGGER:
+                        adc_getValueBlocking(&adcLect, portMAX_DELAY);
+                        //Si la señal es menor que el limite inferior se acepta como pulso
+                        if(adcLect < ADC_REF_L){
+                            /*PULSO DETECTADO*/
+                            detectionFlag = false;
+
+                            adcState = FIRST_TRIGGER;
+                        }
+                        //Si la señal supera la referencia se toma como false trigger
+                        else if(adcLect > ADC_REF){
+                            adcState = FIRST_TRIGGER;
+                        }
+                        break;
+
+                    default: adcState = FIRST_TRIGGER;
+                             adcRefFlag = true;
+                    break;
                 }
             }
+            timerCount = TPM_GetCurrentTimerCount(TPM1);
+            TPM_StopTimer(TPM1);
+
+            //Tiempo en usec
+            usecCount = COUNT_TO_USEC(timerCount, CLOCK_GetFreq(kCLOCK_CoreSysClk));
         }
     }
 }
@@ -170,16 +187,16 @@ static void pwm_test_task(void *pvParameters){
 
         if(key_waitForPressEv(BOARD_SW_ID_1, portMAX_DELAY)){
 
-            led_setConf(&ledToggle);
+            //led_setConf(&ledToggle);
 
             pwm_updateDutycycle(50);
 
-            vTaskDelay(10000 / portTICK_PERIOD_MS);
-            //for(uint32_t i = 0; i < 12000; i++);  //~10 ciclos 43kHz
+            //vTaskDelay(10000 / portTICK_PERIOD_MS);
+            for(uint32_t i = 0; i < 930; i++);  //~10 ciclos 43kHz
 
             pwm_updateDutycycle(0);
 
-            led_setConf(&ledToggle);
+            //led_setConf(&ledToggle);
         }
     }
 }
