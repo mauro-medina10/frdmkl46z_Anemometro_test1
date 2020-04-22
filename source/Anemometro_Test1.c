@@ -97,7 +97,7 @@ int main(void)
     /* Init board hardware. */
     board_init();
 
-    if (xTaskCreate(pwm_test_task, "pwm_test_task", configMINIMAL_STACK_SIZE * 2,NULL, 2 , NULL) != pdPASS)
+    if (xTaskCreate(pwm_test_task, "pwm_test_task", configMINIMAL_STACK_SIZE * 4,NULL, 2 , NULL) != pdPASS)
     {
         printf("Error creacion task pwm test");
         while (1)
@@ -182,21 +182,26 @@ static void pwm_task(void *pvParameters){
 
 
 static void pwm_test_task(void *pvParameters){
+	int32_t adcLect = 0;
+
+	ADC_IniciarConv();
 
     while(1){
 
         if(key_waitForPressEv(BOARD_SW_ID_1, portMAX_DELAY)){
 
-            //led_setConf(&ledToggle);
+            led_setConf(&ledToggle);
 
-            pwm_updateDutycycle(50);
+            //pwm_updateDutycycle(50);
 
-            //vTaskDelay(10000 / portTICK_PERIOD_MS);
-            for(uint32_t i = 0; i < 930; i++);  //~10 ciclos 43kHz
+            adc_getValueBlocking(&adcLect, portMAX_DELAY);
+            printf("val: %d",adcLect);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            //for(uint32_t i = 0; i < 930; i++);  //~10 ciclos 43kHz
 
-            pwm_updateDutycycle(0);
+            //pwm_updateDutycycle(0);
 
-            //led_setConf(&ledToggle);
+            led_setConf(&ledToggle);
         }
     }
 }
