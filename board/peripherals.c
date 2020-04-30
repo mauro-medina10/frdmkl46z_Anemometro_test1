@@ -91,15 +91,16 @@ const tpm_config_t TPM_1_config = {
   .triggerSelect = kTPM_Trigger_Select_0,
   .enableDoze = false,
   .enableDebugMode = true,
-  .enableReloadOnTrigger = false,
+  .enableReloadOnTrigger = true,
   .enableStopOnOverflow = false,
-  .enableStartOnTrigger = false,
+  .enableStartOnTrigger = true,
 };
 
 void TPM_1_init(void) {
   TPM_Init(TPM_1_PERIPHERAL, &TPM_1_config);
   TPM_SetupInputCapture(TPM_1_PERIPHERAL, kTPM_Chnl_0, kTPM_RisingEdge);
   TPM_SetTimerPeriod(TPM_1_PERIPHERAL, ((TPM_1_CLOCK_SOURCE/ (1U << (TPM_1_PERIPHERAL->SC & TPM_SC_PS_MASK))) / 200000) + 1);
+  //TPM_SetTimerPeriod(TPM_1_PERIPHERAL, (uint32_t)USEC_TO_COUNT(50000, CLOCK_GetFreq(kCLOCK_Osc0ErClk)));
 }
 
 /***********************************************************************************************************************

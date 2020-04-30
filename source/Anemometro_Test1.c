@@ -93,6 +93,7 @@ int main(void)
     BOARD_InitPins();
     BOARD_BootClockRUN();
     BOARD_InitDebugConsole();
+    BOARD_InitBootPeripherals();
 
     /* Init board hardware. */
     board_init();
@@ -129,7 +130,7 @@ static void pwm_task(void *pvParameters){
 
             TPM_StartTimer(TPM1, kTPM_SystemClock);
 
-            for(uint32_t i = 0; i < 12000; i++);
+            for(uint32_t i = 0; i < 25000; i++); //espero >500us hasta que llegue el pulso
 
             ADC_IniciarConv();
 
@@ -175,7 +176,7 @@ static void pwm_task(void *pvParameters){
             TPM_StopTimer(TPM1);
 
             //Tiempo en usec
-            usecCount = COUNT_TO_USEC(timerCount, CLOCK_GetFreq(kCLOCK_CoreSysClk));
+            usecCount = COUNT_TO_USEC(timerCount, CLOCK_GetFreq(kCLOCK_Osc0ErClk));
         }
     }
 }
@@ -183,6 +184,8 @@ static void pwm_task(void *pvParameters){
 
 static void pwm_test_task(void *pvParameters){
 	int32_t adcLect = 0;
+    uint32_t timerCount = 0;
+    uint64_t usecCount = 0;
 
 	ADC_IniciarConv();
 
@@ -190,18 +193,32 @@ static void pwm_test_task(void *pvParameters){
 
         if(key_waitForPressEv(BOARD_SW_ID_1, portMAX_DELAY)){
 
-            led_setConf(&ledToggle);
+            //led_setConf(&ledToggle);
 
             //pwm_updateDutycycle(50);
 
+        	//Bloque para testear timer
+        	TPM_StartTimer(TPM1, kTPM_ExternalClock);
+
+        	vTaskDelay(10 / portTICK_PERIOD_MS);
+        	//for(uint32_t i = 0; i < 25000; i++); //espero >500us hasta que llegue el pulso
+
+        	timerCount = TPM_GetCurrentTimerCount(TPM1);
+        	TPM_StopTimer(TPM1);
+            //Tiempo en usec
+            usecCount = COUNT_TO_USEC(timerCount, CLOCK_GetFreq(kCLOCK_Osc0ErClk));
+            printf("time: %d \n",usecCount);
+
+            //Bloque para testeo del ADC
             adc_getValueBlocking(&adcLect, portMAX_DELAY);
-            printf("val: %d",adcLect);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            printf("val: %d \n",adcLect);
+            //vTaskDelay(1000 / portTICK_PERIOD_MS);
+
             //for(uint32_t i = 0; i < 930; i++);  //~10 ciclos 43kHz
 
             //pwm_updateDutycycle(0);
 
-            led_setConf(&ledToggle);
+            //led_setConf(&ledToggle);
         }
     }
 }
