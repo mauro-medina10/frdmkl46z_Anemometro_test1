@@ -205,7 +205,7 @@ static void pwm_test_task(void *pvParameters){
 
         	timerCount = TPM_GetCurrentTimerCount(TPM1);
         	TPM_StopTimer(TPM1);
-            //Tiempo en usec
+            //Tiempo en usec no se por que no anda
             usecCount = COUNT_TO_USEC(timerCount, CLOCK_GetFreq(kCLOCK_Osc0ErClk));
             printf("time: %d \n",usecCount);
 
