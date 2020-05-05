@@ -200,14 +200,14 @@
       </dcdx>
       <periphs name="Peripherals" version="6.0" enabled="true" update_project_code="true">
          <dependencies>
-            <dependency resourceType="SWComponent" resourceId="platform.drivers.tpm" description="TPM Driver not found in the toolchain/IDE project." problem_level="2" source="Peripherals">
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.lptmr" description="LPTMR Driver not found in the toolchain/IDE project." problem_level="2" source="Peripherals">
                <feature name="enabled" evaluation="equal">
                   <data type="Boolean">true</data>
                </feature>
             </dependency>
-            <dependency resourceType="SWComponent" resourceId="platform.drivers.tpm" description="Unsupported version of the TPM Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}." problem_level="1" source="Peripherals">
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.lptmr" description="Unsupported version of the LPTMR Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}." problem_level="1" source="Peripherals">
                <feature name="version" evaluation="equivalent">
-                  <data type="Version">2.0.2</data>
+                  <data type="Version">2.0.1</data>
                </feature>
             </dependency>
          </dependencies>
@@ -223,14 +223,9 @@
                <description></description>
                <options/>
                <dependencies>
-                  <dependency resourceType="ClockOutput" resourceId="TPMCLK" description="TPM clock is inactive." problem_level="2" source="Peripherals:BOARD_InitPeripherals">
+                  <dependency resourceType="ClockOutput" resourceId="OSCERCLK" description="OSCERCLK is inactive." problem_level="2" source="Peripherals:BOARD_InitPeripherals">
                      <feature name="frequency" evaluation="greaterThan">
                         <data type="Frequency" unit="Hz">0</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="TPM1.tmr_ch.0" description="Signal CH0 of peripheral TPM1 is not routed" problem_level="1" source="Peripherals:BOARD_InitPeripherals">
-                     <feature name="routed" evaluation="equal">
-                        <data type="Boolean">true</data>
                      </feature>
                   </dependency>
                </dependencies>
@@ -341,7 +336,7 @@
                         </array>
                      </config_set>
                   </instance>
-                  <instance name="TPM_1" type="tpm" type_id="tpm_e7472ea12d53461b8d293488f3ed72ec" mode="EdgeAligned" peripheral="TPM1" enabled="true">
+                  <instance name="TPM_2" type="tpm" type_id="tpm_e7472ea12d53461b8d293488f3ed72ec" mode="EdgeAligned" peripheral="TPM2" enabled="false">
                      <config_set name="tpm_main_config">
                         <struct name="tpm_config">
                            <setting name="clockSource" value="kTPM_SystemClock"/>
@@ -352,9 +347,9 @@
                            <setting name="triggerSelect" value="kTPM_Trigger_Select_0"/>
                            <setting name="enableDoze" value="false"/>
                            <setting name="enableDebugMode" value="true"/>
-                           <setting name="enableReloadOnTrigger" value="false"/>
+                           <setting name="enableReloadOnTrigger" value="true"/>
                            <setting name="enableStopOnOverflow" value="false"/>
-                           <setting name="enableStartOnTrigger" value="false"/>
+                           <setting name="enableStartOnTrigger" value="true"/>
                         </struct>
                         <set name="timer_interrupts">
                            <selected/>
@@ -379,6 +374,28 @@
                               </struct>
                            </struct>
                         </array>
+                     </config_set>
+                  </instance>
+                  <instance name="LPTMR_1" type="lptmr" type_id="lptmr_2eeab91a1a42f8238f9ac768f18c65ae" mode="LPTMR_GENERAL" peripheral="LPTMR0" enabled="true">
+                     <config_set name="fsl_lptmr">
+                        <setting name="enableInterrupt" value="false"/>
+                        <struct name="interrupt">
+                           <setting name="IRQn" value="LPTMR0_IRQn"/>
+                           <setting name="enable_priority" value="false"/>
+                           <setting name="priority" value="0"/>
+                           <setting name="enable_custom_name" value="false"/>
+                        </struct>
+                        <struct name="lptmr_config">
+                           <setting name="timerMode" value="kLPTMR_TimerModeTimeCounter"/>
+                           <setting name="pinSelect" value="ALT.0"/>
+                           <setting name="pinPolarity" value="kLPTMR_PinPolarityActiveHigh"/>
+                           <setting name="enableFreeRunning" value="true"/>
+                           <setting name="bypassPrescaler" value="true"/>
+                           <setting name="prescalerClockSource" value="kLPTMR_PrescalerClock_3"/>
+                           <setting name="clockSource" value="BOARD_BootClockRUN"/>
+                           <setting name="value" value="kLPTMR_Prescale_Glitch_0"/>
+                           <setting name="timerPeriod" value="5000us"/>
+                        </struct>
                      </config_set>
                   </instance>
                </instances>

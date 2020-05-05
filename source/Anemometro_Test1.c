@@ -41,6 +41,7 @@
 
 /* Freescale includes. */
 #include "board_dsi.h"
+#include "peripherals.h"
 #include "key.h"
 #include "led_rtos.h"
 #include "fsl_common.h"
@@ -190,33 +191,28 @@ static void pwm_test_task(void *pvParameters){
 	ADC_IniciarConv();
 
     while(1){
-
         if(key_waitForPressEv(BOARD_SW_ID_1, portMAX_DELAY)){
 
             //led_setConf(&ledToggle);
 
-            //pwm_updateDutycycle(50);
+            LPTMR_StartTimer(LPTMR0);
 
-        	//Bloque para testear timer
-        	TPM_StartTimer(TPM1, kTPM_ExternalClock);
+            pwm_updateDutycycle(50);
 
-        	vTaskDelay(10 / portTICK_PERIOD_MS);
-        	//for(uint32_t i = 0; i < 25000; i++); //espero >500us hasta que llegue el pulso
+//            //Bloque para testeo del ADC
+//            adc_getValueBlocking(&adcLect, portMAX_DELAY);
+//            printf("val: %d \n",adcLect);
+//            //vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-        	timerCount = TPM_GetCurrentTimerCount(TPM1);
-        	TPM_StopTimer(TPM1);
-            //Tiempo en usec no se por que no anda
+            for(uint32_t i = 0; i < 640; i++);  //~10 ciclos 43kHz
+
+            pwm_updateDutycycle(0);
+
+            //Lectura lptmr
+            timerCount = LPTMR_GetCurrentTimerCount(LPTMR0);
+            LPTMR_StopTimer(LPTMR0);
             usecCount = COUNT_TO_USEC(timerCount, CLOCK_GetFreq(kCLOCK_Osc0ErClk));
-            printf("time: %d \n",usecCount);
-
-            //Bloque para testeo del ADC
-            adc_getValueBlocking(&adcLect, portMAX_DELAY);
-            printf("val: %d \n",adcLect);
-            //vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-            //for(uint32_t i = 0; i < 930; i++);  //~10 ciclos 43kHz
-
-            //pwm_updateDutycycle(0);
+            printf("time: %llu \n",usecCount);
 
             //led_setConf(&ledToggle);
         }

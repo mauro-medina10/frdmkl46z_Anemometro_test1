@@ -42,65 +42,52 @@ component:
  * BOARD_InitPeripherals functional group
  **********************************************************************************************************************/
 /***********************************************************************************************************************
- * TPM_1 initialization code
+ * LPTMR_1 initialization code
  **********************************************************************************************************************/
 /* clang-format off */
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 instance:
-- name: 'TPM_1'
-- type: 'tpm'
-- mode: 'EdgeAligned'
-- type_id: 'tpm_e7472ea12d53461b8d293488f3ed72ec'
+- name: 'LPTMR_1'
+- type: 'lptmr'
+- mode: 'LPTMR_GENERAL'
+- type_id: 'lptmr_2eeab91a1a42f8238f9ac768f18c65ae'
 - functional_group: 'BOARD_InitPeripherals'
-- peripheral: 'TPM1'
+- peripheral: 'LPTMR0'
 - config_sets:
-  - tpm_main_config:
-    - tpm_config:
-      - clockSource: 'kTPM_SystemClock'
-      - tpmSrcClkFreq: 'BOARD_BootClockRUN'
-      - prescale: 'kTPM_Prescale_Divide_1'
-      - timerFrequency: '200000'
-      - useGlobalTimeBase: 'false'
-      - triggerSelect: 'kTPM_Trigger_Select_0'
-      - enableDoze: 'false'
-      - enableDebugMode: 'true'
-      - enableReloadOnTrigger: 'false'
-      - enableStopOnOverflow: 'false'
-      - enableStartOnTrigger: 'false'
-    - timer_interrupts: ''
-    - enable_irq: 'false'
-    - tpm_interrupt:
-      - IRQn: 'TPM1_IRQn'
+  - fsl_lptmr:
+    - enableInterrupt: 'false'
+    - interrupt:
+      - IRQn: 'LPTMR0_IRQn'
       - enable_priority: 'false'
       - priority: '0'
       - enable_custom_name: 'false'
-    - EnableTimerInInit: 'false'
-  - tpm_edge_aligned_mode:
-    - tpm_edge_aligned_channels_config:
-      - 0:
-        - edge_aligned_mode: 'kTPM_InputCapture'
-        - input_capture:
-          - chnNumber: 'kTPM_Chnl_0'
-          - input_capture_edge: 'kTPM_RisingEdge'
-          - enable_chan_irq: 'false'
+    - lptmr_config:
+      - timerMode: 'kLPTMR_TimerModeTimeCounter'
+      - pinSelect: 'ALT.0'
+      - pinPolarity: 'kLPTMR_PinPolarityActiveHigh'
+      - enableFreeRunning: 'true'
+      - bypassPrescaler: 'true'
+      - prescalerClockSource: 'kLPTMR_PrescalerClock_3'
+      - clockSource: 'BOARD_BootClockRUN'
+      - value: 'kLPTMR_Prescale_Glitch_0'
+      - timerPeriod: '5000us'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
-const tpm_config_t TPM_1_config = {
-  .prescale = kTPM_Prescale_Divide_1,
-  .useGlobalTimeBase = false,
-  .triggerSelect = kTPM_Trigger_Select_0,
-  .enableDoze = false,
-  .enableDebugMode = true,
-  .enableReloadOnTrigger = true,
-  .enableStopOnOverflow = false,
-  .enableStartOnTrigger = true,
+const lptmr_config_t LPTMR_1_config = {
+  .timerMode = kLPTMR_TimerModeTimeCounter,
+  .pinSelect = kLPTMR_PinSelectInput_0,
+  .pinPolarity = kLPTMR_PinPolarityActiveHigh,
+  .enableFreeRunning = true,
+  .bypassPrescaler = true,
+  .prescalerClockSource = kLPTMR_PrescalerClock_3,
+  .value = kLPTMR_Prescale_Glitch_0
 };
 
-void TPM_1_init(void) {
-  TPM_Init(TPM_1_PERIPHERAL, &TPM_1_config);
-  TPM_SetupInputCapture(TPM_1_PERIPHERAL, kTPM_Chnl_0, kTPM_RisingEdge);
-  TPM_SetTimerPeriod(TPM_1_PERIPHERAL, ((TPM_1_CLOCK_SOURCE/ (1U << (TPM_1_PERIPHERAL->SC & TPM_SC_PS_MASK))) / 200000) + 1);
-  //TPM_SetTimerPeriod(TPM_1_PERIPHERAL, (uint32_t)USEC_TO_COUNT(50000, CLOCK_GetFreq(kCLOCK_Osc0ErClk)));
+void LPTMR_1_init(void) {
+  /* Initialize the LPTMR */
+  LPTMR_Init(LPTMR_1_PERIPHERAL, &LPTMR_1_config);
+  /* Set LPTMR period to 5000us */
+  LPTMR_SetTimerPeriod(LPTMR_1_PERIPHERAL, LPTMR_1_TICKS);
 }
 
 /***********************************************************************************************************************
@@ -109,7 +96,7 @@ void TPM_1_init(void) {
 void BOARD_InitPeripherals(void)
 {
   /* Initialize components */
-  TPM_1_init();
+  LPTMR_1_init();
 }
 
 /***********************************************************************************************************************

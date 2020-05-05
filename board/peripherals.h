@@ -10,8 +10,7 @@
  * Included files
  **********************************************************************************************************************/
 #include "fsl_common.h"
-#include "fsl_clock.h"
-#include "fsl_tpm.h"
+#include "fsl_lptmr.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -21,19 +20,22 @@ extern "C" {
  * Definitions
  **********************************************************************************************************************/
 /* Definitions for BOARD_InitPeripherals functional group */
+/* BOARD_InitPeripherals defines for LPTMR0 */
 /* Definition of peripheral ID */
-#define TPM_1_PERIPHERAL TPM1
+#define LPTMR_1_PERIPHERAL LPTMR0
 /* Definition of the clock source frequency */
-#define TPM_1_CLOCK_SOURCE 8000000UL
-/* TPM_1 interrupt vector ID (number). */
-#define TPM_1_IRQN TPM1_IRQn
-/* TPM_1 interrupt handler identifier. */
-#define TPM_1_IRQHANDLER TPM1_IRQHandler
+#define LPTMR_1_CLK_FREQ 8000000UL
+/* Definition of the prescaled clock source frequency */
+#define LPTMR_1_INPUT_FREQ 8000000UL
+/* Definition of the timer period in us */
+#define LPTMR_1_USEC_COUNT 5000UL
+/* Definition of the timer period in number of ticks */
+#define LPTMR_1_TICKS 40000UL
 
 /***********************************************************************************************************************
  * Global variables
  **********************************************************************************************************************/
-extern const tpm_config_t TPM_1_config;
+extern const lptmr_config_t LPTMR_1_config;
 
 /***********************************************************************************************************************
  * Initialization functions
